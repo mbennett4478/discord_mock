@@ -1,0 +1,11 @@
+version: '3'
+services:
+  db:
+    image: 'postgres'
+    container_name: 'discord_mock'
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=discord_mock_dev
+    ports:
+      - '5432:5432'
