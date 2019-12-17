@@ -6,7 +6,8 @@ defmodule DiscordMock.Communication do
   import Ecto.Query, warn: false
   alias DiscordMock.Repo
 
-  alias DiscordMock.Communication.Room
+  alias DiscordMock.Communication.{Room, UserRoom}
+  alias DiscordMock.Accounts.User
 
   @doc """
   Returns the list of rooms.
@@ -17,8 +18,10 @@ defmodule DiscordMock.Communication do
       [%Room{}, ...]
 
   """
-  def list_rooms do
-    Repo.all(Room)
+  def list_rooms(user) do
+    Ecto.assoc(user, :rooms)
+    |> Repo.all
+    |> Repo.preload(:users) 
   end
 
   @doc """
@@ -49,10 +52,23 @@ defmodule DiscordMock.Communication do
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_room(attrs \\ %{}) do
-    %Room{}
-    |> Room.changeset(attrs)
-    |> Repo.insert()
+  def create_room(user_ids, attrs \\ %{}) do
+    changeset = Room.changeset(%Room{}, attrs)
+
+    case Repo.insert(changeset) do
+      {:ok, room} -> 
+        Enum.each(user_ids, fn user_id -> 
+          UserRoom.changeset(%UserRoom{}, %{user_id: user_id, room_id: room.id})
+          |> Repo.insert
+        end)
+
+        Repo.preload(room, :users)
+        # updated
+        # UserRoom.changeset(%UserRoom{}, %{user_id: user_id, room_id: room.id})
+        # |> Repo.insert
+        {:ok, room}
+      {:error, changeset} -> {:error, changeset}
+    end
   end
 
   @doc """

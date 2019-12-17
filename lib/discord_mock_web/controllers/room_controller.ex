@@ -4,15 +4,18 @@ defmodule DiscordMockWeb.RoomController do
   alias DiscordMock.Communication
   alias DiscordMock.Communication.Room
 
-  action_fallback DiscordMockWeb.FallbackController
+  # action_fallback DiscordMockWeb.FallbackController
 
   def index(conn, _params) do
-    rooms = Communication.list_rooms()
+    current_user = Guardian.Plug.current_resource(conn)
+    rooms = Communication.list_rooms(current_user)
     render(conn, "index.json", rooms: rooms)
   end
 
-  def create(conn, %{"room" => room_params}) do
-    with {:ok, %Room{} = room} <- Communication.create_room(room_params) do
+  def create(conn, %{"room" => room_params, "users" => user_ids}) do
+    current_user = Guardian.Plug.current_resource(conn)
+    user_ids = [current_user.id | user_ids]
+    with {:ok, %Room{} = room} <- Communication.create_room(user_ids, room_params) do
       conn
       |> put_status(:created)
       |> put_resp_header("location", Routes.room_path(conn, :show, room))
