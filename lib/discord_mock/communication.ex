@@ -21,7 +21,7 @@ defmodule DiscordMock.Communication do
   def list_rooms(user) do
     Ecto.assoc(user, :rooms)
     |> Repo.all
-    |> Repo.preload(:users) 
+    |> Repo.preload(:users)
   end
 
   @doc """
@@ -56,17 +56,23 @@ defmodule DiscordMock.Communication do
     changeset = Room.changeset(%Room{}, attrs)
 
     case Repo.insert(changeset) do
-      {:ok, room} -> 
-        Enum.each(user_ids, fn user_id -> 
+      {:ok, room} ->
+        users = Enum.map(user_ids, fn user_id ->
           UserRoom.changeset(%UserRoom{}, %{user_id: user_id, room_id: room.id})
-          |> Repo.insert
         end)
+        results = users
+          |> Enum.with_index
+          |> Enum.reduce(Ecto.Multi.new(), fn ({changeset, index}, multi) ->
+            Ecto.Multi.insert(multi, Integer.to_string(index), changeset)
+          end)
+          |> Repo.transaction
 
-        Repo.preload(room, :users)
-        # updated
-        # UserRoom.changeset(%UserRoom{}, %{user_id: user_id, room_id: room.id})
-        # |> Repo.insert
-        {:ok, room}
+        case results do
+          {:ok, _multi_user_rooms} ->
+            room = Repo.preload(room, :users)
+            {:ok, room}
+          {:error, _, changeset, _} -> {:error, changeset}
+        end
       {:error, changeset} -> {:error, changeset}
     end
   end
