@@ -23,6 +23,15 @@ defmodule DiscordMockWeb.RoomController do
     end
   end
 
+  def join(conn, %{"id" => room_id}) do
+    current_user = Guardian.Plug.current_resource(conn)
+    
+    with {:ok, %Room{} = room} <- Communication.add(current_user.id, room_id) do
+      render(conn, "show.json", room: room)
+    end
+  end
+
+  ##### Implement these later #####
   def show(conn, %{"id" => id}) do
     room = Communication.get_room!(id)
     render(conn, "show.json", room: room)

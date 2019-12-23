@@ -77,6 +77,17 @@ defmodule DiscordMock.Communication do
     end
   end
 
+  def add_user_to_room(user_id, room_id) do
+    room = get_room!(room_id)
+    changeset = UserRoom.changeset(%UserRoom{}, %{user_id: user_id, room_id: room.id})
+
+    case Repo.insert(changeset) do
+      {:ok, _user_room} ->
+        {:ok, Repo.preload(room, :users)}
+      {:error, changeset} -> {:error, changeset}
+    end
+  end
+
   @doc """
   Updates a room.
 

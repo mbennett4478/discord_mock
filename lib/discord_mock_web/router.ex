@@ -22,6 +22,6 @@ defmodule DiscordMockWeb.Router do
     pipe_through [:api, :jwt_authenticated]
 
     get "/my-user", UserController, :show
-    resources "/rooms", RoomController, [:index, :create, :show]
+    resources "/rooms", RoomController, [:index, :create, :show, :join]
   end
 end
