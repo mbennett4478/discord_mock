@@ -7,7 +7,6 @@ defmodule DiscordMock.Communication do
   alias DiscordMock.Repo
 
   alias DiscordMock.Communication.{Room, UserRoom}
-  alias DiscordMock.Accounts.User
 
   @doc """
   Returns the list of rooms.

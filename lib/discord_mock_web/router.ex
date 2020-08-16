@@ -21,7 +21,10 @@ defmodule DiscordMockWeb.Router do
   scope "/api/v1", DiscordMockWeb do
     pipe_through [:api, :jwt_authenticated]
 
-    get "/my-user", UserController, :show
+    scope "/users" do
+      get "/me", UserController, :show
+    end
+
     resources "/rooms", RoomController, [:index, :create, :show, :join]
   end
 end
